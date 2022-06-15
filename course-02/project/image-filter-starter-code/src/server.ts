@@ -14,6 +14,30 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   app.use(bodyParser.json());
 
   // @TODO1 IMPLEMENT A RESTFUL ENDPOINT
+  app.get( "/filteredimage", async ( req, res ) => {
+    let {image_url} = req.query;
+    //check if the imageurl is valid
+    if(!image_url){
+     let response = res.status(400).send("image url is invalid!");
+     return response;
+    }
+
+    // Try and catch the errors
+    try{
+      const imageurl = await filterImageFromURL(image_url);
+      const process = res.sendFile(imageurl, async (error)=>{
+        await deleteLocalFiles ([imageurl])
+      });
+      return process;
+      
+        } 
+        //catch errors
+        catch (error) {
+        return res.status(422).send("image url ")
+    }
+    
+  } );
+  
   // GET /filteredimage?image_url={{URL}}
   // endpoint to filter an image from a public url.
   // IT SHOULD
