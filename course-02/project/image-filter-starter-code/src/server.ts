@@ -13,31 +13,34 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   // Use the body parser middleware for post requests
   app.use(bodyParser.json());
 
-  // @TODO1 IMPLEMENT A RESTFUL ENDPOINT
-  app.get( "/filteredimage", async ( req, res ) => {
-    let {image_url} = req.query;
-    //check if the imageurl is valid
-    if(!image_url){
-     let response = res.status(400).send("image url is invalid!");
-     return response;
-    }
+  app.get( "/filteredimage", async( req, res ) => {
+    const {image_url} = req.query; //// GET /filteredimage url
+    if(image_url)//validate the image url
+      {
+        try 
+          {
+            const imageurl = await filterImageFromURL(image_url);  //filter an image from a public url
+            const  resp = res.sendFile(imageurl, async (error) => {
+              await deleteLocalFiles([imageurl])
+            });
+            return resp;
+          }
+          catch (error)  //trap the erorrs
+            {
+              const errors = res.status(422).send("The image url cannot be processed");
+              return errors;
+            }
+        }
+    else 
+      {  
+        
+        const response = res.status(400).send("image link can't be empty!"); 
+        return response;
+      }
 
-    // Try and catch the errors
-    try{
-      const imageurl = await filterImageFromURL(image_url);
-      const process = res.sendFile(imageurl, async (error)=>{
-        await deleteLocalFiles ([imageurl])
-      });
-      return process;
-      
-        } 
-        //catch errors
-        catch (error) {
-        return res.status(422).send("image url ")
-    }
-    
   } );
   
+  // @TODO1 IMPLEMENT A RESTFUL ENDPOINT
   // GET /filteredimage?image_url={{URL}}
   // endpoint to filter an image from a public url.
   // IT SHOULD
